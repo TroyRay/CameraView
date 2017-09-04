@@ -1,0 +1,30 @@
+// Top-level build file where you can add configuration options common to all sub-projects/modules.
+
+buildscript {
+    repositories {
+        jcenter()
+    }
+    dependencies {
+        classpath 'com.android.tools.build:gradle:2.3.3'
+
+        // NOTE: Do not place your application dependencies here; they belong
+        // in the individual module build.gradle files
+    }
+}
+
+allprojects {
+    repositories {
+        jcenter()
+
+        flatDir {
+            // cameralib module中引用了google-cameraview库的 aar，在多 module 的情况下，
+            // 其他的module编译会报错，所以需要在所有工程的repositories
+            // 下把cameralib module中的libs目录添加到依赖关系中
+            dirs project(':cameralib').file('libs')
+        }
+    }
+}
+
+task clean(type: Delete) {
+    delete rootProject.buildDir
+}
