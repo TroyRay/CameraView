@@ -150,16 +150,26 @@ public class CameraActivity extends AppCompatActivity implements View.OnClickLis
         public void onPictureTaken(CameraView cameraView, final byte[] data) {
             Log.d(TAG, "onPictureTaken " + data.length);
             Bitmap bitmap = null;
+            int picWidth; //拍照返回的bitmap的宽度（非取景框内图片）
+            int picHeight; //拍照返回的bitmap的高度
             if (data != null) {
                 bitmap = BitmapFactory.decodeByteArray(data, 0, data.length);//data是字节数据，将其解析成类图
             }
             //保存图片到sdcard
             if (bitmap != null) {
-                if (rectPictureSize == null) {
-                    rectPictureSize = DisplayUtil.createCenterPictureRect(ratio, cameraRatio, bitmap.getWidth(), bitmap.getHeight());
+                //如果高宽比和camera的高宽比不一样，说明被旋转了90or270度
+                if(bitmap.getHeight() / (float)bitmap.getWidth() == cameraRatio){
+                    picWidth = bitmap.getWidth();
+                    picHeight = bitmap.getHeight();
+                }else{
+                    picHeight = bitmap.getWidth();
+                    picWidth = bitmap.getHeight();
                 }
-                int x = bitmap.getWidth() / 2 - rectPictureSize.x / 2;
-                int y = bitmap.getHeight() / 2 - rectPictureSize.y / 2;
+                if (rectPictureSize == null) {
+                    rectPictureSize = DisplayUtil.createCenterPictureRect(ratio, cameraRatio, picWidth, picHeight);
+                }
+                int x = picWidth / 2 - rectPictureSize.x / 2;
+                int y = picHeight / 2 - rectPictureSize.y / 2;
                 Bitmap rectBitmap = Bitmap.createBitmap(bitmap, x, y, rectPictureSize.x, rectPictureSize.y);
                 int imageWidth = rectBitmap.getWidth();
                 int imageHeight = rectBitmap.getHeight();
@@ -172,9 +182,7 @@ public class CameraActivity extends AppCompatActivity implements View.OnClickLis
                 if (!rectBitmap.isRecycled()) {
                     rectBitmap.recycle();
                 }
-
                 finish();
-
             }
         }
 

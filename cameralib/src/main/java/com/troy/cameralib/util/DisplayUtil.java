@@ -3,8 +3,11 @@ package com.troy.cameralib.util;
 import android.content.Context;
 import android.graphics.Point;
 import android.graphics.Rect;
+import android.media.ExifInterface;
 import android.util.DisplayMetrics;
 import android.view.WindowManager;
+
+import java.io.IOException;
 
 /**
  * Author: Troy
@@ -81,6 +84,34 @@ public class DisplayUtil {
     public static float dp2px(Context context, float dipValue) {
         float scale = context.getResources().getDisplayMetrics().density;
         return dipValue * scale + 0.5f;
+    }
+
+
+    /**
+     * 读取照片旋转角度
+     * @param path 照片路径
+     * @return 角度
+     */
+    public static int readPictureDegree(String path) {
+        int degree = 0;
+        try {
+            ExifInterface exifInterface = new ExifInterface(path);
+            int orientation = exifInterface.getAttributeInt(ExifInterface.TAG_ORIENTATION, ExifInterface.ORIENTATION_NORMAL);
+            switch (orientation) {
+                case ExifInterface.ORIENTATION_ROTATE_90:
+                    degree = 90;
+                    break;
+                case ExifInterface.ORIENTATION_ROTATE_180:
+                    degree = 180;
+                    break;
+                case ExifInterface.ORIENTATION_ROTATE_270:
+                    degree = 270;
+                    break;
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return degree;
     }
 
 }
