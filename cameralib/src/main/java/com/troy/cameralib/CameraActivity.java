@@ -34,6 +34,7 @@ import com.troy.cameralib.util.DisplayUtil;
 import com.troy.cameralib.util.FileUtil;
 import com.troy.cameralib.view.MaskView;
 
+
 /**
  * Author: Troy
  * Date: 2017/8/30
@@ -77,12 +78,12 @@ public class CameraActivity extends AppCompatActivity implements View.OnClickLis
 
     }
 
-    private void setupViews(@NonNull Intent mIntent){
-        leftRight = mIntent.getIntExtra(EasyCamera.EXTRA_MARGIN_BY_WIDTH,0);
-        topBottom = mIntent.getIntExtra(EasyCamera.EXTRA_MARGIN_BY_HEIGHT,0);
+    private void setupViews(@NonNull Intent mIntent) {
+        leftRight = mIntent.getIntExtra(EasyCamera.EXTRA_MARGIN_BY_WIDTH, 0);
+        topBottom = mIntent.getIntExtra(EasyCamera.EXTRA_MARGIN_BY_HEIGHT, 0);
         ratio = mIntent.getFloatExtra(EasyCamera.EXTRA_VIEW_RATIO, 1f);
         imageUri = mIntent.getParcelableExtra(EasyCamera.EXTRA_OUTPUT_URI);
-        imagePath = FileUtil.getRealFilePath(this,imageUri);
+        imagePath = FileUtil.getRealFilePath(this, imageUri);
     }
 
     private void initView() {
@@ -150,31 +151,27 @@ public class CameraActivity extends AppCompatActivity implements View.OnClickLis
         public void onPictureTaken(CameraView cameraView, final byte[] data) {
             Log.d(TAG, "onPictureTaken " + data.length);
             Bitmap bitmap = null;
-            int picWidth; //拍照返回的bitmap的宽度（非取景框内图片）
-            int picHeight; //拍照返回的bitmap的高度
+            int degree; //图片被旋转的角度
             if (data != null) {
                 bitmap = BitmapFactory.decodeByteArray(data, 0, data.length);//data是字节数据，将其解析成类图
             }
             //保存图片到sdcard
             if (bitmap != null) {
-                //如果高宽比和camera的高宽比不一样，说明被旋转了90or270度
-                if(bitmap.getHeight() / (float)bitmap.getWidth() == cameraRatio){
-                    picWidth = bitmap.getWidth();
-                    picHeight = bitmap.getHeight();
-                }else{
-                    picHeight = bitmap.getWidth();
-                    picWidth = bitmap.getHeight();
+                degree = FileUtil.getRotateDegree(data);
+                if(degree != 0){
+                    //如果图片被系统旋转了，就旋转过来
+                    bitmap = FileUtil.rotateBitmap(degree,bitmap);
                 }
                 if (rectPictureSize == null) {
-                    rectPictureSize = DisplayUtil.createCenterPictureRect(ratio, cameraRatio, picWidth, picHeight);
+                    rectPictureSize = DisplayUtil.createCenterPictureRect(ratio, cameraRatio, bitmap.getWidth(), bitmap.getHeight());
                 }
-                int x = picWidth / 2 - rectPictureSize.x / 2;
-                int y = picHeight / 2 - rectPictureSize.y / 2;
+                int x = bitmap.getWidth() / 2 - rectPictureSize.x / 2;
+                int y = bitmap.getHeight() / 2 - rectPictureSize.y / 2;
                 Bitmap rectBitmap = Bitmap.createBitmap(bitmap, x, y, rectPictureSize.x, rectPictureSize.y);
                 int imageWidth = rectBitmap.getWidth();
                 int imageHeight = rectBitmap.getHeight();
-                FileUtil.saveBitmap(rectBitmap,imagePath);
-                setResultUri(imageUri,imageWidth,imageHeight);
+                FileUtil.saveBitmap(rectBitmap, imagePath);
+                setResultUri(imageUri, imageWidth, imageHeight);
 
                 if (!bitmap.isRecycled()) {
                     bitmap.recycle();
@@ -200,11 +197,11 @@ public class CameraActivity extends AppCompatActivity implements View.OnClickLis
 
 
     /**
-     * @param uri 图片Uri
-     * @param imageWidth 图片宽
+     * @param uri         图片Uri
+     * @param imageWidth  图片宽
      * @param imageHeight 图片高
      */
-    protected void setResultUri(Uri uri,int imageWidth,int imageHeight) {
+    protected void setResultUri(Uri uri, int imageWidth, int imageHeight) {
         setResult(RESULT_OK, new Intent()
                 .putExtra(EasyCamera.EXTRA_OUTPUT_URI, uri)
                 .putExtra(EasyCamera.EXTRA_OUTPUT_IMAGE_WIDTH, imageWidth)
@@ -214,7 +211,7 @@ public class CameraActivity extends AppCompatActivity implements View.OnClickLis
 
 
     /********************************** 以下是权限检查部分 ********************************/
-    private void checkPermission(){
+    private void checkPermission() {
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA)
                 == PackageManager.PERMISSION_GRANTED) {
             mCameraView.start();

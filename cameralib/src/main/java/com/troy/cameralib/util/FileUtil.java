@@ -4,11 +4,14 @@ import android.content.ContentResolver;
 import android.content.Context;
 import android.database.Cursor;
 import android.graphics.Bitmap;
+import android.graphics.Matrix;
 import android.net.Uri;
 import android.os.Environment;
 import android.provider.MediaStore;
+import android.support.media.ExifInterface;
 import android.util.Log;
 import java.io.BufferedOutputStream;
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -73,6 +76,51 @@ public class FileUtil {
             }
         }
         return path;
+    }
+
+    /**
+     * 获取照片被旋转的角度
+     * @param data
+     * @return
+     */
+    public static int getRotateDegree(byte[] data){
+        // Find out if the picture needs rotating by looking at its Exif data
+        ExifInterface exifInterface = null;
+        try {
+            exifInterface = new ExifInterface(new ByteArrayInputStream(data));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        int orientation = exifInterface.getAttributeInt(ExifInterface.TAG_ORIENTATION, ExifInterface.ORIENTATION_UNDEFINED);
+        int rotationDegrees = 0;
+        switch (orientation) {
+            case ExifInterface.ORIENTATION_ROTATE_90:
+                rotationDegrees = 90;
+                break;
+            case ExifInterface.ORIENTATION_ROTATE_180:
+                rotationDegrees = 180;
+                break;
+            case ExifInterface.ORIENTATION_ROTATE_270:
+                rotationDegrees = 270;
+                break;
+        }
+        return rotationDegrees;
+    }
+
+    public static Bitmap rotateBitmap(int angle,Bitmap bitmap) {
+        if(bitmap != null){
+            int myWidth = bitmap.getWidth();
+            int myHeight = bitmap.getHeight();
+            //旋转图片 动作
+            Matrix mMatrix = new Matrix();
+            mMatrix.postRotate(angle);
+            // 创建新的图片
+            Bitmap resizedBitmap = Bitmap.createBitmap(bitmap, 0, 0,
+                    myWidth, myHeight, mMatrix, true);
+            return resizedBitmap;
+        }else{
+            return bitmap;
+        }
     }
 
 }
