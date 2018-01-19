@@ -166,10 +166,10 @@ public class CameraActivity extends AppCompatActivity implements View.OnClickLis
                 FileUtil.saveBitmap(rectBitmap,imagePath);
                 setResultUri(imageUri,imageWidth,imageHeight);
 
-                if (bitmap.isRecycled()) {
+                if (!bitmap.isRecycled()) {
                     bitmap.recycle();
                 }
-                if (rectBitmap.isRecycled()) {
+                if (!rectBitmap.isRecycled()) {
                     rectBitmap.recycle();
                 }
 
